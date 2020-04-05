@@ -1,53 +1,57 @@
 use std::net::{TcpListener, TcpStream};
 
+
 pub fn start() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        println!("listen:{}",stream.peer_addr().unwrap());
+        println!("listen:{}", stream.peer_addr().unwrap());
         handle_request(stream);
     }
 }
 
 fn handle_request(mut stream: TcpStream) {
     use std::io::prelude::*;
-    let mut buffer = [0; 32];
+    loop {
+        let mut i = 1;
+        let mut buffer = [0; 32];
 
-    stream.read(&mut buffer).unwrap();
-    println!("req:{:?}", buffer);
+        stream.read(&mut buffer).unwrap();
+        println!("req:{:?}", buffer);
 
-    let response = res1(&buffer);
-    println!("res:{:?}", response);
+        let response = res(i,&buffer);
+        println!("res:{:?}", response);
 
-    //若是0xFF就不写入了，不发送
-    if response[1] != 0xFF {
-        stream.write(&response).unwrap();
+        //若是0xFF就不写入了，不发送
+        if response[1] != 0xFF {
+            stream.write(&response).unwrap();
+        }
+        stream.flush().unwrap();
+        i += 1;
+        continue;
     }
-    stream.flush().unwrap();
-
-    let mut buffer = [0; 32];
-    stream.read(&mut buffer).unwrap();
-    println!("{:?}",buffer);
-
-//    let response = res2(&buffer);
-
 }
 
-// 第一次握手，客户端发来的request, 包含多个字节， 第一字节是版本号，第二字节是方法的种类，第三字节是方法
+fn res(i:u8,req:&[u8]) -> &[u8] {
+    match i {
+        1 => res1(req),
+        2 => res2(req),
+        3 => res3(req)
+    }
+}
+
+// 建立链接，客户端发来的request, 包含多个字节， 第一字节是版本号，第二字节是方法的种类，第三字节是方法
 //    +----+----------+----------+
 //    |VER | NMETHODS | METHODS  |
 //    +----+----------+----------+
 //    | 1  |    1     |  1~255   |
 //    +----+----------+----------+
-fn res1(req: &[u8]) -> [u8; 2] {
+fn res1(req: &[u8]) -> &[u8] {
     use std::collections::HashMap;
     let mut result = [0; 2];
 
-    //socks版本
-    let ver = req[0];
-    //客户端提供多少种验证方法
-    let n_methods = req[1];
+   let [ver,n_methods] = *req;
     //具体每种方法
     let mut methods: HashMap<u8, _> = HashMap::with_capacity(n_methods as usize);
 
@@ -64,7 +68,7 @@ fn res1(req: &[u8]) -> [u8; 2] {
     // 返回第一个是固定的
     result[0] = 0x05 as u8;
 
-    //确定socks5请求种类    
+    //确定socks5请求种类
     let res_method: u8 = match methods.contains_key(&(Methods::NoAuth as u8)) {
         true => Methods::NoAuth as u8,
         false => Methods::NoReturn as u8,
@@ -73,14 +77,53 @@ fn res1(req: &[u8]) -> [u8; 2] {
     //写入验证类型
     result[1] = res_method;
 
-    result
+    &result[..]
 }
 
+fn res2(req: &[u8]) -> &[u8] {
+    let [ver,cmd,_,a_type] = *req;
 
-/* fn res2(req: &[u8]) -> [u8; ] {
+    &[1] //麻烦
+}
 
-} */
+struct DST {
+    dst_addr: String,
+    dst_port: [u8;2],
+}
+impl DST {
+    fn new(a_type: AddrType, input: &[u8]) -> DST {
+        let addr_vec = Vec::new();
+        let addr = match a_type {
+            AddrType::Ip4 => {
+                let a = &input[4..9];
+            },
+            AddrType::Ip6 => Ipv6Addr::new()
+            AddrType::Domain => {
+                let n = input[4];
+                String::from_utf8_lossy(&input[5..(6+n) as usize])
+            }
+        };
+        DST {
+            dst_addr: addr,
+            dst_port: [2,4]
+        }
+    }    
+}
 
+enum AddrType {
+    Ip4,
+    Ip6,
+    Domain,
+}
+impl AddrType {
+    fn new(a_type: u8) -> AddrType {
+        match a_type {
+            0x01 => AddrType::Ip4,
+            0x04 => AddrType::Ip6,
+            0x03 => AddrType::Domain
+        }
+    }
+}
 
 
 enum Socks5 {

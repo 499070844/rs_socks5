@@ -1,6 +1,9 @@
 use std::net::{TcpListener, TcpStream};
 
 
+
+mod socks5;
+
 //处理链接关闭
 //tcp面向字节流 -> 系统帮你完成(校验顺序 -> 系统切割数据 -> 重传 -> 流量控制)
 //udp面向数据包 -> 需校验 -> 可广播

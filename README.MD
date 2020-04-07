@@ -46,6 +46,25 @@ Sock5.start(&self) {
 
 socks5建立链接的迭代器?
 
+```rs
+struct Handle {
+  fn new() -> Handle;
+  fn read() -> [u8];
+  fn send(u8) -> Resule<(),>
+}
+
+trait SocksHandle {
+  fn read_xxx() -> struct {ver,cmd,...}?// 这个可以实现吗？
+}
+```
+
+```rs
+let active =  Handle::new(stream);
+
+let request = active.read();
+```
+
+
 
 
     

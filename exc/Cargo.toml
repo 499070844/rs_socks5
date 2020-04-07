@@ -1,0 +1,11 @@
+[package]
+name = "exc"
+version = "0.1.0"
+authors = ["Linux MI <499070844@163.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+server = { path =  "../server" }

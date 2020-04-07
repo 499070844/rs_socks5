@@ -1,10 +1,13 @@
 use std::net::{TcpListener, TcpStream};
 
+pub mod lsocks5;
+
+
 
 //处理链接关闭
 //tcp面向字节流 -> 系统帮你完成(校验顺序 -> 系统切割数据 -> 重传 -> 流量控制)
 //udp面向数据包 -> 需校验 -> 可广播
-pub fn start() {
+/* pub fn start() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
     for stream in listener.incoming() {
@@ -42,14 +45,14 @@ fn res(i:u8,req:&[u8]) -> &[u8] {
         2 => res2(req),
     }
 }
-
+ */
 // 建立链接，客户端发来的request, 包含多个字节， 第一字节是版本号，第二字节是方法的种类，第三字节是方法
 //    +----+----------+----------+
 //    |VER | NMETHODS | METHODS  |
 //    +----+----------+----------+
 //    | 1  |    1     |  1~255   |
 //    +----+----------+----------+
-fn res1(req: &[u8]) -> &[u8] {
+/* fn res1(req: &[u8]) -> &[u8] {
     use std::collections::HashMap;
     let mut result = [0; 2];
 
@@ -87,8 +90,8 @@ fn res2(req: &[u8]) -> &[u8] {
 
     &[1] //麻烦
 }
-
-struct DST {
+ */
+/* struct DST {
     dst_addr: String,
     dst_port: [u8;2],
 }
@@ -127,7 +130,7 @@ impl AddrType {
     }
 }
 
-
+ */
 enum Socks5 {
     Ver = 0x05,
 }
@@ -148,6 +151,17 @@ enum Methods {
     IanaD = 0x7F,
     NoReturn = 0xFF,
 }
+
+/* 
+    Sock5.start(&self) {
+        let listener = Tcplistener::bind(Socks5.socket).unwrap();
+        for stream in listener.incoming().unwrap() {
+            let stream = stream.unwrap();
+            Socks5.handle(stream);
+        }
+    }
+*/
+
 
 #[cfg(test)]
 mod tests {

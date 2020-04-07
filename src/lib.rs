@@ -1,6 +1,9 @@
 use std::net::{TcpListener, TcpStream};
 
 
+//处理链接关闭
+//tcp面向字节流 -> 系统帮你完成(校验顺序 -> 系统切割数据 -> 重传 -> 流量控制)
+//udp面向数据包 -> 需校验 -> 可广播
 pub fn start() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
@@ -37,7 +40,6 @@ fn res(i:u8,req:&[u8]) -> &[u8] {
     match i {
         1 => res1(req),
         2 => res2(req),
-        3 => res3(req)
     }
 }
 

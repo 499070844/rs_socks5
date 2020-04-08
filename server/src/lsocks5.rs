@@ -1,4 +1,4 @@
-use std::net::{TcpListener, TcpStream};
+use super::handle::stream::Handle;
 
 pub struct Socks5 {
     ver: u8,
@@ -34,8 +34,7 @@ impl Socks5 {
     pub fn start(&self) {
         use std::net::{TcpListener, TcpStream};
         use std::process;
-        use Methods;
-
+        // 检查参数之间是否冲突
         match self.auth {
             None => {}
             _ => match self.method {
@@ -47,14 +46,16 @@ impl Socks5 {
             },
         }
 
-
+        //开始监听
         let listener = TcpListener::bind(self.socket).unwrap();
         println!("Server is listening at {}",self.socket);
-
+        //处理字节流
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                  //  handle::new(stream);
+                    use super::handle::HandleSocks5;
+                    let mut handlee = Handle::new(stream);
+                    handlee.read_req(1);
                 },
                 Err(e) => println!("{:#}",e),
             }
@@ -83,4 +84,10 @@ pub enum Methods {
 pub struct Auth {
     pub user: String,
     pub pw: String,
+}
+
+pub enum Cmd {
+    Connect = 0x01,
+    Bind = 0x02,
+    Udp = 0x03,
 }

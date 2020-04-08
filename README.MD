@@ -61,7 +61,13 @@ trait SocksHandle {
 ```rs
 let active =  Handle::new(stream);
 
-let request = active.read();
+let request = active.read_xxx(1);
+// .......
+// active.send(response)
+
+let request = active.read_xxx(2);
+// .......
+// active.send(response2)
 ```
 
 

@@ -32,7 +32,7 @@ impl Socks5 {
     }
 
     pub fn start(&self) {
-        use std::net::{TcpListener, TcpStream};
+        use std::net::{TcpListener};
         use std::process;
         // 检查参数之间是否冲突
         match self.auth {

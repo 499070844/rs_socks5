@@ -1,45 +1,78 @@
-pub mod stream;
+use std::net::TcpStream;
+use std::process;
 
-pub trait HandleSocks5 {
-    fn read_req(&mut self, status: u8) -> ();
+pub mod socks;
+use socks::{HandleSocks5,First};
+
+
+/// Tcp only
+pub struct Handle {
+    stream: TcpStream,
 }
 
-enum Items {
-    A(First),
-    B(),
-}
-use super::lsocks5::{Cmd, Methods};
-#[derive(Debug)]
-struct First {
-    ver: u8,
-    n_method: u8,
-    methods: Vec<u8>,
-}
-impl First {
-    pub fn from_vec(sth: Vec<u8>) -> Result<Self, ()> {
-        let ver = sth.get(0);
-        let n_method = sth.get(1);
+impl Handle {
+    pub fn new(stream: TcpStream) -> Self {
+        Handle { stream }
+    }
 
-        if let Some(ver) = ver {
-            if let Some(n_method) = n_method {
-                let methods = sth.get(2..(2 + n_method) as usize);
-                if let Some(methods) = methods {
-                    return Ok(First {
-                        ver: *ver,
-                        n_method: *n_method,
-                        methods: methods.to_vec(),
-                    });
+    ///读取stream内容，返回Result<Vec<u8>>
+    fn read(&mut self) -> Result<Vec<u8>, ()> {
+        use std::io::prelude::Read;
+        let mut buffer: [u8; 1024] = [0; 1024];
+        let read_len = self.stream.read(&mut buffer);
+        match read_len {
+            Ok(len) => {
+                let mut result = Vec::new();
+                for i in 0..=len + 1 {
+                    result.push(buffer[i]);
                 }
+                Ok(result)
+            }
+            Err(_) => {
+                println!("Error: fail to read stream");
+                Err(())
             }
         }
-        return Err(());
+    }
+
+    pub fn send(&mut self, content: &[u8]) -> bool {
+        use std::io::prelude::Write;
+        let writen_len = self.stream.write(content);
+
+        match writen_len {
+            Err(_) => {
+                println!("Error: fail to  write data");
+                return false;
+            },
+            Ok(_) => {
+                return true;
+            }
+        }
     }
 }
-struct Second {
-    ver: u8,
-    cmd: u8,
-    rsv: u8,
-    a_type: u8,
-    dst_addr: u8,
-    dst_port: [u8; 2],
+
+
+
+
+
+
+
+//TODO:这里是下面要写的
+impl HandleSocks5 for Handle {
+    fn read_req(&mut self, status: u8) {
+        use socks::Socks5Req;
+        let raw_req = self.read();
+        let position = match status {
+            1 => First::from_vec,
+            //TODO:2 => Second::from_vec
+            _ => {
+                println!("这个地方只能填一或者二");
+                process::exit(1);
+            }
+        };
+        if let Ok(raw_req) = raw_req {
+            let a =position(raw_req).unwrap();
+            println!("a:{:#?}",a);
+        }
+    } 
 }

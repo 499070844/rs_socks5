@@ -1,4 +1,5 @@
-use super::handle::stream::Handle;
+use super::handle::socks::HandleSocks5;
+use super::handle::Handle;
 
 pub struct Socks5 {
     ver: u8,
@@ -32,7 +33,7 @@ impl Socks5 {
     }
 
     pub fn start(&self) {
-        use std::net::{TcpListener};
+        use std::net::TcpListener;
         use std::process;
         // 检查参数之间是否冲突
         match self.auth {
@@ -48,21 +49,19 @@ impl Socks5 {
 
         //开始监听
         let listener = TcpListener::bind(self.socket).unwrap();
-        println!("Server is listening at {}",self.socket);
+        println!("Server is listening at {}", self.socket);
         //处理字节流
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    use super::handle::HandleSocks5;
                     let mut handlee = Handle::new(stream);
                     handlee.read_req(1);
-                },
-                Err(e) => println!("{:#}",e),
+                }
+                Err(e) => println!("{:#}", e),
             }
         }
     }
 }
-
 
 /// 方法的种类：
 ///    + NoAuth:0x00: NO AUTHENTICATION REQUIRED
@@ -72,6 +71,7 @@ impl Socks5 {
 ///    + 0x80: to X’FE’ RESERVED FOR PRIVATE METHODS
 ///    + NoReturn:0xFF: NO ACCEPTABLE METHODS
 /// 其中IanaU,D是区间 从 0x03~0x7F
+#[derive(Debug)]
 pub enum Methods {
     NoAuth = 0x00,
     GssAPI = 0x01,
@@ -79,6 +79,19 @@ pub enum Methods {
     IanaU = 0x03,
     IanaD = 0x7F,
     NoReturn = 0xFF,
+}
+impl Methods {
+    pub fn new(n: u8) -> Methods {
+        match n {
+            0x00 => Methods::NoAuth,
+            0x01 => Methods::GssAPI,
+            0x02 => Methods::UserPass,
+            0x03 => Methods::IanaU,
+            0x7F => Methods::IanaD,
+            0xFF => Methods::NoReturn,
+            _ => Methods::NoReturn,
+        }
+    }
 }
 /// 当Method为UserPass(0x02)时 用户名和密码才生效
 pub struct Auth {
@@ -90,4 +103,15 @@ pub enum Cmd {
     Connect = 0x01,
     Bind = 0x02,
     Udp = 0x03,
+}
+impl Cmd {
+    //FIXME: 这个地方可能要做错误处理
+    pub fn new(n: u8) -> Self {
+        match n {
+            0x01 => Self::Connect,
+            0x02 => Self::Bind,
+            0x03 => Self::Udp,
+            _ => Self::Connect,
+        }
+    }
 }

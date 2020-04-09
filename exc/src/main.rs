@@ -1,4 +1,5 @@
-use server::lsocks5::{Socks5, Auth, Methods};
+use server::lsocks5::{Socks5, Auth};
+use server::Methods;
 
 fn main() {
     let mut socks5 = Socks5::new();

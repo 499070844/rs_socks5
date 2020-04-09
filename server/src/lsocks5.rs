@@ -1,4 +1,4 @@
-use super::handle::socks::HandleSocks5;
+use super::handle::socks::{HandleSocks5,Methods};
 use super::handle::Handle;
 
 pub struct Socks5 {
@@ -55,7 +55,8 @@ impl Socks5 {
             match stream {
                 Ok(stream) => {
                     let mut handlee = Handle::new(stream);
-                    handlee.read_req(1);
+                    let a = handlee.read_req(1).unwrap();
+                    println!("{:#?}",a);
                 }
                 Err(e) => println!("{:#}", e),
             }
@@ -63,55 +64,10 @@ impl Socks5 {
     }
 }
 
-/// 方法的种类：
-///    + NoAuth:0x00: NO AUTHENTICATION REQUIRED
-///    + GssApi:0x01: GSSAPI
-///    + UserPass:0x02: USERNAME/PASSWORD
-///    + IanaU,IanaD:0x03: to X’7F’ IANA ASSIGNED
-///    + 0x80: to X’FE’ RESERVED FOR PRIVATE METHODS
-///    + NoReturn:0xFF: NO ACCEPTABLE METHODS
-/// 其中IanaU,D是区间 从 0x03~0x7F
-#[derive(Debug)]
-pub enum Methods {
-    NoAuth = 0x00,
-    GssAPI = 0x01,
-    UserPass = 0x02,
-    IanaU = 0x03,
-    IanaD = 0x7F,
-    NoReturn = 0xFF,
-}
-impl Methods {
-    pub fn new(n: u8) -> Methods {
-        match n {
-            0x00 => Methods::NoAuth,
-            0x01 => Methods::GssAPI,
-            0x02 => Methods::UserPass,
-            0x03 => Methods::IanaU,
-            0x7F => Methods::IanaD,
-            0xFF => Methods::NoReturn,
-            _ => Methods::NoReturn,
-        }
-    }
-}
 /// 当Method为UserPass(0x02)时 用户名和密码才生效
 pub struct Auth {
     pub user: String,
     pub pw: String,
 }
 
-pub enum Cmd {
-    Connect = 0x01,
-    Bind = 0x02,
-    Udp = 0x03,
-}
-impl Cmd {
-    //FIXME: 这个地方可能要做错误处理
-    pub fn new(n: u8) -> Self {
-        match n {
-            0x01 => Self::Connect,
-            0x02 => Self::Bind,
-            0x03 => Self::Udp,
-            _ => Self::Connect,
-        }
-    }
-}
+

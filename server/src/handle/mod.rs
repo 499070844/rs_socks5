@@ -2,8 +2,7 @@ use std::net::TcpStream;
 use std::process;
 
 pub mod socks;
-use socks::{HandleSocks5,First};
-
+use socks::{First, HandleSocks5, Items, Socks5Req};
 
 /// Tcp only
 pub struct Handle {
@@ -43,7 +42,7 @@ impl Handle {
             Err(_) => {
                 println!("Error: fail to  write data");
                 return false;
-            },
+            }
             Ok(_) => {
                 return true;
             }
@@ -51,16 +50,9 @@ impl Handle {
     }
 }
 
-
-
-
-
-
-
 //TODO:这里是下面要写的
 impl HandleSocks5 for Handle {
-    fn read_req(&mut self, status: u8) {
-        use socks::Socks5Req;
+    fn read_req(&mut self, status: u8) -> Result<Items,()> {
         let raw_req = self.read();
         let position = match status {
             1 => First::from_vec,
@@ -71,8 +63,11 @@ impl HandleSocks5 for Handle {
             }
         };
         if let Ok(raw_req) = raw_req {
-            let a =position(raw_req).unwrap();
-            println!("a:{:#?}",a);
-        }
-    } 
+            let req = position(raw_req);
+            if let Ok(req) = req {
+                return Ok(Items::A(req));
+            }
+        };
+        Err(())
+    }
 }

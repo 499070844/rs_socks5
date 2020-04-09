@@ -1,17 +1,24 @@
 
-//TODO:这个函数要返回东西，现在还mei xiang hao fan hui shen me dongxi
 pub trait HandleSocks5 {
-    fn read_req(&mut self, status: u8) ;
+//TODO:这个函数要返回东西，现在还mei xiang hao fan hui shen me dongxi
+    fn read_req(&mut self, status: u8) -> Result<Items,()>;
 }
 pub trait Socks5Req {
     fn from_vec(sth: Vec<u8>) -> Result<Self,()> where Self: Sized;
 }
 
-enum Items {
+//TODO:B STATus 2 即是 B还没写
+#[derive(Debug)]
+pub enum Items {
     A(First),
     B(),
 }
-use crate::lsocks5::{Cmd, Methods};
+
+//    +----+----------+----------+
+//    |VER | NMETHODS | METHODS  |
+//    +----+----------+----------+
+//    | 1  |    1     |  1~255   |
+//    +----+----------+----------+
 #[derive(Debug)]
 pub struct First {
     ver: u8,
@@ -46,4 +53,55 @@ struct Second {
     a_type: u8,
     dst_addr: u8,
     dst_port: [u8; 2],
+}
+
+
+/// 方法的种类：
+///    + NoAuth:0x00: NO AUTHENTICATION REQUIRED
+///    + GssApi:0x01: GSSAPI
+///    + UserPass:0x02: USERNAME/PASSWORD
+///    + IanaU,IanaD:0x03: to X’7F’ IANA ASSIGNED
+///    + 0x80: to X’FE’ RESERVED FOR PRIVATE METHODS
+///    + NoReturn:0xFF: NO ACCEPTABLE METHODS
+/// 其中IanaU,D是区间 从 0x03~0x7F
+#[derive(Debug)]
+pub enum Methods {
+    NoAuth = 0x00,
+    GssAPI = 0x01,
+    UserPass = 0x02,
+    IanaU = 0x03,
+    IanaD = 0x7F,
+    NoReturn = 0xFF,
+}
+impl Methods {
+    pub fn new(n: u8) -> Methods {
+        match n {
+            0x00 => Methods::NoAuth,
+            0x01 => Methods::GssAPI,
+            0x02 => Methods::UserPass,
+            0x03 => Methods::IanaU,
+            0x7F => Methods::IanaD,
+            0xFF => Methods::NoReturn,
+            _ => Methods::NoReturn,
+        }
+    }
+}
+
+
+
+pub enum Cmd {
+    Connect = 0x01,
+    Bind = 0x02,
+    Udp = 0x03,
+}
+impl Cmd {
+    //FIXME: 这个地方可能要做错误处理
+    pub fn new(n: u8) -> Self {
+        match n {
+            0x01 => Self::Connect,
+            0x02 => Self::Bind,
+            0x03 => Self::Udp,
+            _ => Self::Connect,
+        }
+    }
 }

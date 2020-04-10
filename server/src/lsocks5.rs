@@ -1,4 +1,4 @@
-use super::handle::socks::{HandleSocks5,Methods};
+use super::handle::socks::{HandleSocks5,Methods,Items,First};
 use super::handle::Handle;
 
 pub struct Socks5 {
@@ -11,7 +11,7 @@ pub struct Socks5 {
 impl Socks5 {
     /// 初始化Socks5
     /// auth:None,method:0x00,socket: localhost:20480
-    pub fn new() -> Socks5 {
+    pub fn new() -> Self {
         Socks5 {
             ver: 0x05,
             auth: None,
@@ -56,11 +56,24 @@ impl Socks5 {
                 Ok(stream) => {
                     let mut handlee = Handle::new(stream);
                     let a = handlee.read_req(1).unwrap();
-                    println!("{:#?}",a);
+                    //TODO: socks5.handle_request(a);
                 }
                 Err(e) => println!("{:#}", e),
             }
         }
+    }
+
+    ///集中业务逻辑，把需要返回的，处理的逻辑放在这里，之后在start()里调用。&[u8] -> handle.send(&[u8])
+    fn response1(&self, request: &First) -> &[u8] {
+        if self.ver != request.ver {
+            return &[0];
+        }
+        //TODO:let a = self.method.clone() as u8;
+
+        for i in 0..request.methods.len() {
+            
+        }
+        &[0]
     }
 }
 

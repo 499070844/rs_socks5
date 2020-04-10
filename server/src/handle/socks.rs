@@ -1,6 +1,5 @@
 
 pub trait HandleSocks5 {
-//TODO:这个函数要返回东西，现在还mei xiang hao fan hui shen me dongxi
     fn read_req(&mut self, status: u8) -> Result<Items,()>;
 }
 pub trait Socks5Req {
@@ -21,16 +20,20 @@ pub enum Items {
 //    +----+----------+----------+
 #[derive(Debug)]
 pub struct First {
-    ver: u8,
-    n_method: Methods,
-    methods: Vec<u8>,
+    pub ver: u8,
+    pub n_method: Methods,
+    pub methods: Vec<u8>,
 }
+//NOTE: 验证request东一个西一个的，不好管理，还是要一个地方统一写验证规则
 impl Socks5Req for First {
     fn from_vec(sth: Vec<u8>) -> Result<First, ()> {
         let ver = sth.get(0);
         let n_method = sth.get(1);
 
         if let Some(ver) = ver {
+            //ver： 版本为5
+            if ver == &0x05 {
+
             if let Some(n_method) = n_method {
                 let methods = sth.get(2..(2 + n_method) as usize);
                 if let Some(methods) = methods {
@@ -40,7 +43,7 @@ impl Socks5Req for First {
                         //TODO:to_vec()是一个Copy方法，以后想想不用Copy怎么实现
                         methods: methods.to_vec(),
                     });
-                }
+                }}
             }
         }
         return Err(());

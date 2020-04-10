@@ -39,8 +39,7 @@ impl Handle {
         let writen_len = self.stream.write(content);
 
         match writen_len {
-            Err(_) => {
-                println!("Error: fail to  write data");
+            Err(_) => { println!("Error: fail to  write data");
                 return false;
             }
             Ok(_) => {

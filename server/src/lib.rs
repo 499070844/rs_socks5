@@ -1,4 +1,3 @@
-use std::net::{TcpListener, TcpStream};
 
 pub mod lsocks5;
 pub use handle::socks::{Methods};
@@ -50,9 +49,6 @@ mod handle;
 }
 */
 
-enum Socks5 {
-    Ver = 0x05,
-}
 
 
 

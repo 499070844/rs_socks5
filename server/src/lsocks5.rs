@@ -1,4 +1,4 @@
-use super::handle::socks::{HandleSocks5,Methods,Items,First};
+use super::handle::socks::{First, HandleSocks5, Items, Methods};
 use super::handle::Handle;
 
 pub struct Socks5 {
@@ -55,8 +55,20 @@ impl Socks5 {
             match stream {
                 Ok(stream) => {
                     let mut handlee = Handle::new(stream);
-                    let a = handlee.read_req(1).unwrap();
-                    //TODO: socks5.handle_request(a);
+                    let req = handlee.read_req(1).unwrap();
+                    let res = match req {
+                        Items::A(first) => self.response1(first),
+                        _ => vec!(0x05,0xFF),
+                    };
+                    handlee.send(&res[..]);
+
+                    let req = handlee.read_req(2).unwrap();
+                    let res = match req {
+                        //TODO: After finish self.response2
+                        Items::B(second) => self.response2(second),
+                        _ => vec!(2),
+                    };
+                    handlee.send(&res[..]);
                 }
                 Err(e) => println!("{:#}", e),
             }
@@ -64,16 +76,27 @@ impl Socks5 {
     }
 
     ///集中业务逻辑，把需要返回的，处理的逻辑放在这里，之后在start()里调用。&[u8] -> handle.send(&[u8])
-    fn response1(&self, request: &First) -> &[u8] {
-        if self.ver != request.ver {
-            return &[0];
+    fn response1(&self, request: First) -> Vec<u8> {
+        let s_method = self.method as u8;
+        let method = request.methods;
+        let mut flag = false;
+        for i in 0..method.len() {
+            if method[i] == s_method {
+                flag = true; 
+            }
         }
-        //TODO:let a = self.method.clone() as u8;
 
-        for i in 0..request.methods.len() {
-            
+        if flag {
+            Vec::from(&[0x05,s_method][..])
+        } else {
+            Vec::from(&[0x05,0xFF][..])
         }
-        &[0]
+    }
+
+
+    //第二段业务逻辑，第二次链接
+    fn response2(&self) {
+        // TODO:... After finish Second::from_vec()
     }
 }
 
@@ -82,5 +105,3 @@ pub struct Auth {
     pub user: String,
     pub pw: String,
 }
-
-
